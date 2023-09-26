@@ -1,7 +1,6 @@
 import uvicorn
 import cv2
 import numpy as np
-from io import BytesIO
 from paddleocr import PaddleOCR
 from typing import Union, List
 from fastapi import FastAPI, File, UploadFile
@@ -35,6 +34,7 @@ async def create_item(item: Item):
 
 @app.post("/upload/")
 async def upload_file(files: List[UploadFile] = File(...)):
+    result = None
     for file in files:
         file_bytes = await file.read()
         image = cv2.imdecode(np.frombuffer(file_bytes, np.uint8), cv2.IMREAD_COLOR)
