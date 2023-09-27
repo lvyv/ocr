@@ -16,3 +16,4 @@
 
 【参考与致谢】
  - [Trickle的分析](https://github.com/PromptExpert/Trickle-On-WeChat/)
+ - [并发](https://fastapi.tiangolo.com/async/)
