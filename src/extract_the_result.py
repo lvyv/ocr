@@ -27,7 +27,7 @@ def get_prompt_file_path(action: AiCmdEnum) -> str:           # 得到对应acti
     return str(prompt_file_path)
 
 
-def load_prompt_from_file(filename) -> list[tuple[str, str]]:
+def load_prompt_from_file(filename) -> list:
     # read ini file.
     config = configparser.ConfigParser()
     config.read(filename, encoding="utf-8")
@@ -42,12 +42,12 @@ def load_prompt_from_file(filename) -> list[tuple[str, str]]:
     return chat_list
 
 
-def load_action_prompt(action: AiCmdEnum) -> list[tuple[str, str]]:
+def load_action_prompt(action: AiCmdEnum) -> list:
     return load_prompt_from_file(get_prompt_file_path(action))
 
 
 def chat_with_prompt_for_pic(template: list, mode: str, temperature: float, content: list) -> (
-        list[str]):
+        list):
     """
     chat with prompt.
     :param template: chat prompt list.

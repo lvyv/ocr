@@ -63,7 +63,7 @@ class TestMain(unittest.TestCase):
         """Test app.main:app"""
         logging.info(f'********************  XBCX AI services  ********************')
         logging.info(f'Task tables were created by import statement {tb.TABLES}.')
-        logging.info(f'AI micro service starting at {ct.SCHEDULE_HOST}: {ct.SCHEDULE_PORT}')
+        logging.info(f'AI micro service starting at https://{ct.SCHEDULE_HOST}:{ct.SCHEDULE_PORT}/docs')
         uvicorn.run('app.main:app',  # noqa 标准用法
                 host=ct.SCHEDULE_HOST,
                 port=ct.SCHEDULE_PORT,

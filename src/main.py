@@ -4,8 +4,8 @@ import numpy as np
 from typing import Union, List
 from fastapi import FastAPI, File, UploadFile
 from pydantic import BaseModel
-from src.ocr import get_ocr
-from src.hdbscan import get_merged_polygon_for_hdbscan
+from ocr import get_ocr
+from hdbscan import get_merged_polygon_for_hdbscan
 from extract_the_result import load_action_prompt
 from extract_the_result import chat_with_prompt_for_pic
 from extract_the_result import AiCmdEnum

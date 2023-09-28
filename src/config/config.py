@@ -64,7 +64,8 @@ class ConfigSet:
             cls.cfg_ = cls.load_json(pathtocfg)
         return cls.cfg_
 
-a=1
+
+# a=1
 cfg = ConfigSet.get_cfg()
 URL_SOH = cfg['url_soh']
-print(URL_SOH)
+# print(URL_SOH)

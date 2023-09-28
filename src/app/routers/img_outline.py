@@ -45,7 +45,7 @@ from config import constants as ct
 from app.models.dao_reqhistory import RequestHistoryCRUD
 from paddleocr import PaddleOCR
 import logging
-from src.main import get_image_and_ocr_and_result
+from main import get_image_and_ocr_and_result
 
 
 router = APIRouter(
