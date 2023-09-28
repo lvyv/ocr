@@ -6,8 +6,8 @@ from langchain import LLMChain
 from langchain.callbacks import get_openai_callback
 from langchain.chat_models import ChatOpenAI
 
-OPENAI_API_KEY = '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'
-OPENAI_ORGANIZATION = 'org-8x23jwDk2hK6NZEDkwKDVURY'
+OPENAI_API_KEY = ''
+OPENAI_ORGANIZATION = ''
 
 
 class AiCmdEnum(str, Enum):
