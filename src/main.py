@@ -15,6 +15,7 @@ app = FastAPI()
 
 @app.post("/upload/")
 async def upload_file(files: List[UploadFile] = File(...)):
+    result = None
     for file in files:
         file_bytes = await file.read()
         image = cv2.imdecode(np.frombuffer(file_bytes, np.uint8), cv2.IMREAD_COLOR)

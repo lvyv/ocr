@@ -5,19 +5,19 @@ from collections import Counter
 
 def produce_point(rectangle):
 
-    # æå–çŸ©å½¢çš„å·¦ä¸‹è§’å’Œå³ä¸Šè§’åæ ‡
+    # ÌáÈ¡¾ØĞÎµÄ×óÏÂ½ÇºÍÓÒÉÏ½Ç×ø±ê
     bottom_left = rectangle[0]
     top_right = rectangle[2]
 
-    # ç”Ÿæˆåæ ‡ç‚¹
+    # Éú³É×ø±êµã
     points = np.mgrid[bottom_left[0]:top_right[0]+1:20, bottom_left[1]:top_right[1]+1:20].reshape(2, -1).T
 
     return points
 
 
-def get_merged_polygon_for_hdbscan(rectangles):   # output:[[åŒä¸€èšç±»çš„æ–‡å­—],[]]
-    # å°†çŸ©å½¢åæ ‡è½¬æ¢ä¸ºç‰¹å¾å‘é‡ features
-    # åˆ›å»ºä¸€ä¸ªå­—å…¸ chara = {â€™æ–‡å­—â€™ï¼šçŸ©å½¢ç”Ÿæˆçš„ç‚¹çš„ä¸ªæ•°}
+def get_merged_polygon_for_hdbscan(rectangles):   # output:[[Í¬Ò»¾ÛÀàµÄÎÄ×Ö],[]]
+    # ½«¾ØĞÎ×ø±ê×ª»»ÎªÌØÕ÷ÏòÁ¿ features
+    # ´´½¨Ò»¸ö×Öµä chara = {¡¯ÎÄ×Ö¡¯£º¾ØĞÎÉú³ÉµÄµãµÄ¸öÊı}
     chara = {}
     features = np.array([[0, 0]])
     for rectangle in rectangles:
@@ -25,20 +25,20 @@ def get_merged_polygon_for_hdbscan(rectangles):   # output:[[åŒä¸€èšç±»çš„æ–‡å
         chara[rectangle[1][0]] = len(points)
         features = np.append(features, points, axis=0)
 
-    # å»ºç«‹hdbscanæ¨¡å‹å¹¶è®­ç»ƒå¾—åˆ°labels
+    # ½¨Á¢hdbscanÄ£ĞÍ²¢ÑµÁ·µÃµ½labels
     hdb = HDBSCAN()
     hdb.fit(features)
     labels = hdb.labels_
 
-    # å°†æ¯ä¸ªèšç±»ä¸­çš„æ–‡å­—åˆå¹¶åˆ°ä¸€èµ·
+    # ½«Ã¿¸ö¾ÛÀàÖĞµÄÎÄ×ÖºÏ²¢µ½Ò»Æğ
     characters = {}
     now_node = 1
     for wenzi in chara.keys():
         nums = chara[wenzi]
-        wz_labels = Counter(labels[now_node:now_node + nums])  # wz_labelsè¡¨ç¤ºåœ¨æ–‡å­—æ‰€åœ¨çš„çŸ©å½¢å†…ç”Ÿæˆçš„ç‚¹ä¸ªä¸ªå¯¹åº”çš„æ ‡ç­¾æ‰€ç»Ÿè®¡çš„æ•°é‡
+        wz_labels = Counter(labels[now_node:now_node + nums])  # wz_labels±íÊ¾ÔÚÎÄ×ÖËùÔÚµÄ¾ØĞÎÄÚÉú³ÉµÄµã¸ö¸ö¶ÔÓ¦µÄ±êÇ©ËùÍ³¼ÆµÄÊıÁ¿
         now_node += nums
 
-        # æ‰¾åˆ°æœ€å¤šçš„æ ‡ç­¾
+        # ÕÒµ½×î¶àµÄ±êÇ©
         max_label = 0
         max_label_num = 0
         for i in wz_labels:
@@ -50,7 +50,7 @@ def get_merged_polygon_for_hdbscan(rectangles):   # output:[[åŒä¸€èšç±»çš„æ–‡å
             characters[max_label] = []
         characters[max_label].append(wenzi)
 
-    # å°†æ¯ä¸ªèšç±»çš„æ–‡å­—å­˜æ”¾åˆ°åˆ—è¡¨ä¸­
+    # ½«Ã¿¸ö¾ÛÀàµÄÎÄ×Ö´æ·Åµ½ÁĞ±íÖĞ
     final = []
     for i in characters.keys():
         final.append(characters[i])
