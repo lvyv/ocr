@@ -60,3 +60,6 @@ SCHEDULE_HOST = cfg['schedule_host']
 SCHEDULE_PORT = cfg['schedule_port']
 SCHEDULE_KEY = cfg['schedule_key']
 SCHEDULE_CER = cfg['schedule_cer']
+
+OPEN_AI_KEY = cfg['open_ai_key']
+OPEN_AI_ORG = cfg['open_ai_org']

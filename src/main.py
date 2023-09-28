@@ -6,9 +6,10 @@ from fastapi import FastAPI, File, UploadFile
 from pydantic import BaseModel
 from src.ocr import get_ocr
 from src.hdbscan import get_merged_polygon_for_hdbscan
-from src.extract_the_result import load_action_prompt
-from src.extract_the_result import chat_with_prompt_for_pic
-from src.extract_the_result import AiCmdEnum
+from extract_the_result import load_action_prompt
+from extract_the_result import chat_with_prompt_for_pic
+from extract_the_result import AiCmdEnum
+
 
 app = FastAPI()
 
@@ -26,6 +27,19 @@ async def upload_file(files: List[UploadFile] = File(...)):
         orc_prompt = load_action_prompt(AiCmdEnum.orc)
 
         result = chat_with_prompt_for_pic(orc_prompt, mode="gpt-3.5-turbo", temperature=0.0, content=characters)
+
+    return result.split('\n')
+
+
+def get_image_and_ocr_and_result(file):
+    image = cv2.imdecode(np.frombuffer(file, np.uint8), cv2.IMREAD_COLOR)
+    rectangles = get_ocr(image)
+    characters = get_merged_polygon_for_hdbscan(rectangles)
+
+    # get prompt from file.
+    orc_prompt = load_action_prompt(AiCmdEnum.orc)
+
+    result = chat_with_prompt_for_pic(orc_prompt, mode="gpt-3.5-turbo", temperature=0.0, content=characters)
 
     return result.split('\n')
 

@@ -5,9 +5,7 @@ from langchain.prompts import ChatPromptTemplate
 from langchain import LLMChain
 from langchain.callbacks import get_openai_callback
 from langchain.chat_models import ChatOpenAI
-
-OPENAI_API_KEY = ''
-OPENAI_ORGANIZATION = ''
+import config.constants as ct
 
 
 class AiCmdEnum(str, Enum):
@@ -61,8 +59,8 @@ def chat_with_prompt_for_pic(template: list, mode: str, temperature: float, cont
     # 0.construct chat prompt.
     chat_template = ChatPromptTemplate.from_messages(template)
     # 1.init chat llm.
-    llm = ChatOpenAI(temperature=temperature, model=mode, openai_api_key=OPENAI_API_KEY,
-                     openai_organization=OPENAI_ORGANIZATION)
+    llm = ChatOpenAI(temperature=temperature, model=mode, openai_api_key=ct.OPEN_AI_KEY,
+                     openai_organization=ct.OPEN_AI_ORG)
     # 3.init llm chain
     chain = LLMChain(llm=llm, prompt=chat_template)
     # 4.generate response.

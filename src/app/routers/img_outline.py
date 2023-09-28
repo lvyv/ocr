@@ -45,6 +45,8 @@ from config import constants as ct
 from app.models.dao_reqhistory import RequestHistoryCRUD
 from paddleocr import PaddleOCR
 import logging
+from src.main import get_image_and_ocr_and_result
+
 
 router = APIRouter(
     prefix="/api/v1/image",
@@ -66,8 +68,9 @@ async def outline(files: List[UploadFile] = File(...), db: get_db = Depends()):
     :return:
     :rtype:
     """
+    '''
     try:
-        res = None
+        # res = None
         # for file in files:
         #     file_bytes = await file.read()
         #     image = cv2.imdecode(np.frombuffer(file_bytes, np.uint8), cv2.IMREAD_COLOR)
@@ -92,11 +95,22 @@ async def outline(files: List[UploadFile] = File(...), db: get_db = Depends()):
             # 'memo': json.dumps(devs)
         }
         item = ReqItemCreate(**external_data)
+
         outline_item = RequestHistoryCRUD(db).create_record(item)
         res = ServiceResult(outline_item)
         # 接下来要派发任务到队列，由消费者完成任务，并更新任务
         ImageOutlineService(db, files, res.value.id)
-        # res = await bs.soh(json.loads(sohin.devices), json.loads(sohin.tags), sohin.startts, sohin.endts)
+
+        for file in files:
+            file_bytes = await file.read()
+            result = get_image_and_ocr_and_result(file_bytes)
+
+        res = await bs.soh(json.loads(sohin.devices), json.loads(sohin.tags), sohin.startts, sohin.endts)
     except json.decoder.JSONDecodeError:
         res = ServiceResult(AppException.HttpRequestParamsIllegal())
-    return handle_result(res)
+    # return handle_result(res)
+    '''
+    for file in files:
+        file_bytes = await file.read()
+        result = get_image_and_ocr_and_result(file_bytes)
+    return result
