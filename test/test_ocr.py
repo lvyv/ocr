@@ -2,6 +2,21 @@ from paddleocr import PaddleOCR, draw_ocr
 from PIL import Image, ImageDraw
 from shapely.geometry import Polygon
 
+
+def get_ocr(cv_image):   # input:image   output:[[[int,int],[int,int],[int,int],[int,int]],(character,float)]
+    pre_ocr = PaddleOCR(use_angle_cls=True, lang="ch", use_gpu=False)
+    cv_result = pre_ocr.ocr(cv_image, cls=True)
+
+    # 将所有坐标存放在rectangles
+    rectangles = []
+    for index in range(len(cv_result)):
+        contant = result[index]
+        for sth in contant:
+            rectangles.append(sth)
+
+    return rectangles
+
+
 if __name__ == '__main__':
     # Paddleocr目前支持的多语言语种可以通过修改lang参数进行切换
     # 例如`ch`, `en`, `fr`, `german`, `korean`, `japan`

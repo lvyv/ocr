@@ -1,37 +1,16 @@
-# test
 import uvicorn
 import cv2
 import numpy as np
-from io import BytesIO
-from paddleocr import PaddleOCR
 from typing import Union, List
 from fastapi import FastAPI, File, UploadFile
 from pydantic import BaseModel
-
-
-class Item(BaseModel):
-    name: str
-    description: Union[str, None] = None
-    price: float
-    tax: Union[float, None] = None
-
+from src.ocr import get_ocr
+from src.hdbscan import get_merged_polygon_for_hdbscan
+from src.extract_the_result import load_action_prompt
+from src.extract_the_result import chat_with_prompt_for_pic
+from src.extract_the_result import AiCmdEnum
 
 app = FastAPI()
-
-
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
-
-
-@app.post("/items/")
-async def create_item(item: Item):
-    return item
 
 
 @app.post("/upload/")
@@ -39,10 +18,15 @@ async def upload_file(files: List[UploadFile] = File(...)):
     for file in files:
         file_bytes = await file.read()
         image = cv2.imdecode(np.frombuffer(file_bytes, np.uint8), cv2.IMREAD_COLOR)
-        ocr = PaddleOCR(use_angle_cls=True, lang="ch")  # need to run only once to download and load model into memory
-        result = ocr.ocr(image, cls=True)
-        # print(content.decode('utf-8'))
-    return result
+        rectangles = get_ocr(image)
+        characters = get_merged_polygon_for_hdbscan(rectangles)
+
+        # get prompt from file.
+        orc_prompt = load_action_prompt(AiCmdEnum.orc)
+
+        result = chat_with_prompt_for_pic(orc_prompt, mode="gpt-3.5-turbo", temperature=0.0, content=characters)
+
+    return result.split('\n')
 
 
 if __name__ == '__main__':
