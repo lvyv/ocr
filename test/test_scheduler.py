@@ -35,8 +35,12 @@ from app import __version__
 import app.models.tables as tb
 import config.constants as ct
 import logging
+from app.main import run
 
-logging.basicConfig(level=logging.INFO,
+# 配置logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG,
                     format='%(levelname)s: %(asctime)s %(filename)s %(message)s',
                     datefmt='%a %d %b %Y %H:%M:%S')
 
@@ -60,18 +64,19 @@ class TestMain(unittest.TestCase):
         """Tear down test fixtures, if any."""
 
     def test_Main(self):
+        run()
         """Test app.main:app"""
-        logging.info(f'********************  XBCX AI services  ********************')
-        logging.info(f'Task tables were created by import statement {tb.TABLES}.')
-        logging.info(f'AI micro service starting at https://{ct.SCHEDULE_HOST}:{ct.SCHEDULE_PORT}/docs')
-        uvicorn.run('app.main:app',  # noqa 标准用法
-                host=ct.SCHEDULE_HOST,
-                port=ct.SCHEDULE_PORT,
-                ssl_keyfile=ct.SCHEDULE_KEY,
-                ssl_certfile=ct.SCHEDULE_CER,
-                log_level='warning',
-                workers=3
-                )
+        # logging.info(f'********************  XBCX AI services  ********************')
+        # logging.info(f'Task tables were created by import statement {tb.TABLES}.')
+        # logging.info(f'AI micro service starting at {ct.SCHEDULE_HOST}: {ct.SCHEDULE_PORT}')
+        # uvicorn.run('app.main:app',  # noqa 标准用法
+        #         host=ct.SCHEDULE_HOST,
+        #         port=ct.SCHEDULE_PORT,
+        #         ssl_keyfile=ct.SCHEDULE_KEY,
+        #         ssl_certfile=ct.SCHEDULE_CER,
+        #         log_level='warning',
+        #         workers=3
+        #         )
 
 
 if __name__ == "__main__":

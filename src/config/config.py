@@ -33,6 +33,11 @@ Configuration related stuff here.
 # License: Apache Licence 2.0
 
 import json
+import logging
+
+# 配置logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class ConfigSet:
@@ -47,6 +52,8 @@ class ConfigSet:
             with open(fp, 'r', encoding='UTF-8') as load_f:
                 load_dict = json.load(load_f)
                 load_f.close()
+        except exception as e:
+            print(e)
         finally:
             return load_dict
 
@@ -62,7 +69,9 @@ class ConfigSet:
     def get_cfg(cls, pathtocfg='model_service.cfg'):
         if cls.cfg_ is None:
             cls.cfg_ = cls.load_json(pathtocfg)
+            logger.info(f'Config file {pathtocfg} loaded.')
         return cls.cfg_
+
 
 
 # a=1

@@ -45,7 +45,8 @@ from config import constants as ct
 from app.models.dao_reqhistory import RequestHistoryCRUD
 from paddleocr import PaddleOCR
 import logging
-from main import get_image_and_ocr_and_result
+#from main import get_image_and_ocr_and_result
+from app.routers.common import img_queue
 
 
 router = APIRouter(
@@ -53,6 +54,12 @@ router = APIRouter(
     tags=["图片内容提炼模型"],
     responses={404: {"description": "Not found"}},
 )
+
+
+class Content:
+    def __init__(self, pid, img_list):
+        self.id = pid
+        self.img = img_list
 
 
 # 图片内容提炼模型接口，该层接口可以实现模型与调用方解耦，并添加负载均衡等扩展功能。
@@ -68,7 +75,7 @@ async def outline(files: List[UploadFile] = File(...), db: get_db = Depends()):
     :return:
     :rtype:
     """
-    '''
+
     try:
         # res = None
         # for file in files:
@@ -101,16 +108,28 @@ async def outline(files: List[UploadFile] = File(...), db: get_db = Depends()):
         # 接下来要派发任务到队列，由消费者完成任务，并更新任务
         ImageOutlineService(db, files, res.value.id)
 
-        for file in files:
-            file_bytes = await file.read()
-            result = get_image_and_ocr_and_result(file_bytes)
-
-        res = await bs.soh(json.loads(sohin.devices), json.loads(sohin.tags), sohin.startts, sohin.endts)
+        # res = await bs.soh(json.loads(sohin.devices), json.loads(sohin.tags), sohin.startts, sohin.endts)
     except json.decoder.JSONDecodeError:
         res = ServiceResult(AppException.HttpRequestParamsIllegal())
-    # return handle_result(res)
-    '''
+
+    img_list = []
     for file in files:
         file_bytes = await file.read()
+        img_list.append(file_bytes)
+
+    pro = Content(res.value.id, img_list)
+    img_queue.put(pro)
+
+    '''
+    i = 0
+    results = {}
+    for file in files:
+        file_bytes = await file.read()
+        i += 1
+
+        img = "picture{}".format(i)
+
         result = get_image_and_ocr_and_result(file_bytes)
-    return result
+        results[img] = result
+    '''
+    return handle_result(res)
