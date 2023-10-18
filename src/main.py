@@ -32,6 +32,7 @@ async def upload_file(files: List[UploadFile] = File(...)):
 
 
 def get_image_and_ocr_and_result(file):
+
     image = cv2.imdecode(np.frombuffer(file, np.uint8), cv2.IMREAD_COLOR)
     rectangles = get_ocr(image)
     characters = get_merged_polygon_for_hdbscan(rectangles)
