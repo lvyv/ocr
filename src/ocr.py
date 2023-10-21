@@ -16,3 +16,4 @@ def get_ocr(image):
             rectangles.append(line)
 
     return rectangles
+

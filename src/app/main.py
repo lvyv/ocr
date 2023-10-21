@@ -71,13 +71,14 @@ def get_image_and_ocr_and_result(file):
         logger.info(f'2. Clustering ended.')
         # get prompt from file.
         orc_prompt = load_action_prompt(AiCmdEnum.orc)
+        raise(openai.error.AuthenticationError('This is a temparory error.'))   #  临时加入，可以注释掉
         result = chat_with_prompt_for_pic(orc_prompt, mode="gpt-3.5-turbo", temperature=0.0, content=characters)
         logger.info(f'3. LLM ended.')
         logger.info(f'{characters}\n{orc_prompt}\n{result}')
         res = result.split('\n')       # noqa
     except openai.error.AuthenticationError as err:
         logger.error(err)
-        res = [f'error: {err.user_message}']
+        res = [rectangles, characters]    # 出错则返回rectangles矩形，聚类结果
     finally:
         return res
 
