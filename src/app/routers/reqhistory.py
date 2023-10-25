@@ -34,6 +34,15 @@ from app.services.reqhistory import ReqHistoryService
 from app.utils.service_result import handle_result
 from config.database import get_db
 import logging
+from extract_the_result import load_action_prompt
+from extract_the_result import chat_with_prompt_for_pic
+from extract_the_result import AiCmdEnum
+import urllib.parse
+import requests
+
+# 配置logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 router = APIRouter(
     prefix="/api/v1/reqhistory",
@@ -44,8 +53,10 @@ router = APIRouter(
 
 @router.put("/item/")
 async def update_item(reqid: str, res: str, db: get_db = Depends()):
+    logger.info(f'save db start!')
     reqs = ReqHistoryService(db)
     result = reqs.update_item(reqid, res)
+    logger.info(f'save db ended!')
     logging.info(f'the submitted task:{reqid} got result - {res} ')
     return handle_result(result)
 

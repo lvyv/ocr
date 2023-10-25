@@ -46,7 +46,7 @@ import app.models.tables as tb
 from fastapi.staticfiles import StaticFiles
 from multiprocessing import Process
 # from Rest import get_image_and_ocr_and_result
-# import config.constants as ct
+import config.constants as ct
 import logging
 import urllib.parse
 import openai
@@ -54,64 +54,36 @@ from hdbscan import get_merged_polygon_for_hdbscan
 from extract_the_result import load_action_prompt
 from extract_the_result import chat_with_prompt_for_pic
 from extract_the_result import AiCmdEnum
+from Rest import get_image_chara_and_prompt
+import json
 
 # 配置logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-# 图片识别任务Worker进程
-def get_image_and_ocr_and_result(file):
-    res = []
-    try:
-        image = cv2.imdecode(np.frombuffer(file, np.uint8), cv2.IMREAD_COLOR)
-        rectangles = get_ocr(image)
-        logger.info(f'1. OCR ended.')
-        characters = get_merged_polygon_for_hdbscan(rectangles)
-        logger.info(f'2. Clustering ended.')
-        # get prompt from file.
-        orc_prompt = load_action_prompt(AiCmdEnum.orc)
-        raise(openai.error.AuthenticationError('This is a temparory error.'))   #  临时加入，可以注释掉
-        result = chat_with_prompt_for_pic(orc_prompt, mode="gpt-3.5-turbo", temperature=0.0, content=characters)
-        logger.info(f'3. LLM ended.')
-        logger.info(f'{characters}\n{orc_prompt}\n{result}')
-        res = result.split('\n')       # noqa
-    except openai.error.AuthenticationError as err:
-        logger.error(err)
-        res = [rectangles, characters]    # 出错则返回rectangles矩形，聚类结果
-    finally:
-        return res
-
-
-def img_deal(queue):
+def img_deal(queue):  # 从队列中获得任务id和图片，得到图片分类好的文字后将id和文字用put方式传给gpt
     logger.info(f'OCR process img_deal starting...')
     while True:
         item = queue.get()
         logger.info(f'OCR task confirmed.')
         pid = item.id
-        img_list = item.img
+        image = item.img
 
-        i = 0
-        results = {}
-        for file in img_list:
-            i += 1
+        chara = get_image_chara_and_prompt(image)
 
-            img = "picture{}".format(i)
+        # 用requests上传chara
+        x1 = json.dumps(chara)
+        encoded_params = urllib.parse.quote(x1)
 
-            result = get_image_and_ocr_and_result(file)
-            results[img] = result
+        base_url = f"https://127.0.0.1:29082/gpt/?repid={pid}&chara={encoded_params}"
 
-        # 用requests上传results
-        encoded_params = urllib.parse.urlencode(results)
-        base_url = "http://127.0.0.1:29081/api/v1/reqhistory/item/?reqid={}&res={}".format(pid, encoded_params)
-
-        response = requests.put(base_url, data=encoded_params)
+        response = requests.put(base_url, data=encoded_params, verify=False)
 
         if response.status_code == requests.codes.ok:
             print("PUT请求成功！")
         else:
             print("PUT请求失败！")
-        print(results)
 
 
 # FastAPI进程
@@ -147,14 +119,14 @@ def run():
     """Test app.main:app"""
     img_deal_process = Process(target=img_deal, args=(img_queue,))
     img_deal_process.start()
-    logger.info(f'********************  XBCX AI services  ********************')
+    logger.info(f'***2*****************  XBCX AI services  ********************')
     # logging.info(f'Task tables were created by import statement {tb.TABLES}.')
     # logging.info(f'AI micro service starting at {ct.SCHEDULE_HOST}: {ct.SCHEDULE_PORT}')
     uvicorn.run('app.main:app',  # noqa 标准用法
                 host='0.0.0.0',
                 port=29081,
-                # ssl_keyfile=ct.SCHEDULE_KEY,
-                # ssl_certfile=ct.SCHEDULE_CER,
+                ssl_keyfile=ct.SCHEDULE_KEY,
+                ssl_certfile=ct.SCHEDULE_CER,
                 # log_level='info',
                 # workers=3
                 )
