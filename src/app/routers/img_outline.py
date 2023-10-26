@@ -112,12 +112,13 @@ async def outline(files: List[UploadFile] = File(...), db: get_db = Depends()):
     except json.decoder.JSONDecodeError:
         res = ServiceResult(AppException.HttpRequestParamsIllegal())
 
-    img_list = []
+    # img_list = []
+    # for file in files:
+    #     file_bytes = await file.read()
+    #     img_list.append(file_bytes)
     for file in files:
         file_bytes = await file.read()
-        img_list.append(file_bytes)
-
-    pro = Content(res.value.id, img_list)
+    pro = Content(res.value.id, file_bytes)
     img_queue.put(pro)
 
     '''
