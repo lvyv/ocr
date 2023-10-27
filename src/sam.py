@@ -4,6 +4,7 @@
 from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
 import cv2
 import numpy as np
+import config.constants as ct
 
 
 def show_anns(anns):  # 构建标签张量
@@ -30,7 +31,7 @@ def show_anns(anns):  # 构建标签张量
 
 
 def create_masks(image):
-    sam = sam_model_registry["default"](checkpoint=r"E:\proj\ocr\sam_vit_h_4b8939.pth")
+    sam = sam_model_registry["default"](checkpoint=ct.SAM_MODEL_PATH)
     mask_generator = SamAutomaticMaskGenerator(sam)
     masks = mask_generator.generate(image)
     return masks

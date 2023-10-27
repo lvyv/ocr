@@ -63,3 +63,4 @@ SCHEDULE_CER = cfg['schedule_cer']
 
 OPEN_AI_KEY = cfg['open_ai_key']
 OPEN_AI_ORG = cfg['open_ai_org']
+SAM_MODEL_PATH = cfg['sam']

@@ -39,7 +39,6 @@ from app.utils.request_exceptions import (
     http_exception_handler,
     request_validation_exception_handler,
 )
-from ocr import get_ocr
 from app.utils.app_exceptions import app_exception_handler
 import threading
 import app.models.tables as tb
@@ -50,7 +49,7 @@ import config.constants as ct
 import logging
 import urllib.parse
 import openai
-from hdbscan import get_merged_polygon_for_hdbscan
+# from hdbscan import get_merged_polygon_for_hdbscan
 from extract_the_result import load_action_prompt
 from extract_the_result import chat_with_prompt_for_pic
 from extract_the_result import AiCmdEnum
@@ -62,15 +61,29 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-def img_deal(queue):  # 从队列中获得任务id和图片，得到图片分类好的文字后将id和文字用put方式传给gpt
-    logger.info(f'OCR process img_deal starting...')
+def img_deal(imgqueue):  # 从队列中获得任务id和图片，得到图片分类好的文字后将id和文字用put方式传给gpt
     while True:
-        item = queue.get()
-        logger.info(f'OCR task confirmed.')
+        item = imgqueue.get()
+        logger.info(f'获取任务id和图片成功.')
         pid = item.id
         image = item.img
 
-        chara = get_image_chara_and_prompt(image)
+        # 将图片传给OCR API
+        img_files = [("files", image)]
+        url = f"https://127.0.0.1:29083/ocr/"
+        response = requests.post(url, files=img_files, verify=False)
+
+        if response.status_code == requests.codes.ok:
+            print("post ocr请求成功！")
+        else:
+            print("post ocr请求失败！")
+
+        # 获取坐标
+        data = response.json()
+        rectangles = json.loads(data)
+        logger.info(f"OCR 获取坐标成功！")
+
+        chara = get_image_chara_and_prompt(image, rectangles)
 
         # 用requests上传chara
         x1 = json.dumps(chara)

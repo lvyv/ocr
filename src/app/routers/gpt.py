@@ -8,8 +8,12 @@ import requests
 import uvicorn
 import config.constants as ct
 import json
+import os
+from typing import List
+from fastapi import APIRouter, File, UploadFile
 
-
+os.environ['http_proxy'] = 'http://127.0.0.1:49777'
+os.environ['https_proxy'] = 'http://127.0.0.1:49777'
 # 配置logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -47,9 +51,24 @@ async def gpt_llm(repid: str, chara: str):
         print("PUT请求失败！")
     return
 
-@app2.put("/test/")
-async def test(repid: str, chara: str):
-    return repid, chara
+
+@app2.post("/test/")
+async def test(files: List[UploadFile] = File(...)):
+    for file in files:
+        file_bytes = await file.read()
+    img_files = [("files", file_bytes)]
+
+    url = f"https://127.0.0.1:29083/ocr/"
+    response = requests.post(url, files=img_files, verify=False)
+
+    if response.status_code == requests.codes.ok:
+        print("PUT请求成功！")
+    else:
+        print("PUT请求失败！")
+
+    li_data = response.json()
+    data = json.loads(li_data)
+    return data
 
 
 if __name__ == '__main__':

@@ -57,7 +57,7 @@ async def update_item(reqid: str, res: str, db: get_db = Depends()):
     reqs = ReqHistoryService(db)
     result = reqs.update_item(reqid, res)
     logger.info(f'save db ended!')
-    logging.info(f'the submitted task:{reqid} got result - {res} ')
+    logger.info(f'the submitted task:{reqid} got result - {res} ')
     return handle_result(result)
 
 
