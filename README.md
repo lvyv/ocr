@@ -1,21 +1,24 @@
 # 快速开始
 
 1. 在python3.10环境下，项目的根目录执行如下命令安装依赖包。
+   
    ```shell
    pip install -r requirements.txt
    ```
-2. 在本地下载安装segment anything源码和模型参数
 
+2. 在本地下载安装segment anything源码和模型参数
+   
    （1）源码本地安装
+   
    ```shell
    git clone https://github.com/facebookresearch/segment-anything.git
    cd segment-anything
    pip install -e .
    ```
+   
    （2）下载模型文件[【vit_h】](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth)
-
+   
    模型文件建议下载到源码根下的新建checkpoints目录，命名sam_vit_h_4b8939.pth。
-
 
 3. 确保test目录下的配置文件model_service.cfg中的配置项是正确的。
    
@@ -50,18 +53,26 @@
    export PYTHONPATH=../src
    python test_scheduler.py
    ```
+   
    ```shell
    cd test
    export PYTHONPATH=../src
    python ../src/app/routers/gpt.py
    ```
-      ```shell
+   
+   ```shell
    cd test
    export PYTHONPATH=../src
    python ../src/app/routers/PaddleOCR.py
-   ```   
+   ```
 
 5. 访问[https://127.0.0.1:29081/docs](https://127.0.0.1:29081/docs) ，输入pic目录下图片测试。
+
+# 已知问题
+
+ **1. test_scheduler.py文件运行过程中报一个警告回调错误**
+
+**2. test_scheduler.py的工作进场容错不好，一旦出错，无法继续完成任务**
 
 # 任务要求
 
