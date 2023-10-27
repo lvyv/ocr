@@ -61,6 +61,10 @@ SCHEDULE_PORT = cfg['schedule_port']
 SCHEDULE_KEY = cfg['schedule_key']
 SCHEDULE_CER = cfg['schedule_cer']
 
+OPEN_AI_HTTP_PROXY = cfg['http_proxy']
 OPEN_AI_KEY = cfg['open_ai_key']
 OPEN_AI_ORG = cfg['open_ai_org']
-SAM_MODEL_PATH = cfg['sam']
+OPEN_AI_MODEL = cfg['chatgpt_model']
+SAM_MODEL_PATH = cfg['sam_model']
+
+

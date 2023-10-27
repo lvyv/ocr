@@ -6,14 +6,14 @@ from extract_the_result import AiCmdEnum
 import urllib.parse
 import requests
 import uvicorn
-import config.constants as ct
 import json
 import os
 from typing import List
-from fastapi import APIRouter, File, UploadFile
+from fastapi import File, UploadFile
+import config.constants as ct
 
-os.environ['http_proxy'] = 'http://127.0.0.1:49777'
-os.environ['https_proxy'] = 'http://127.0.0.1:49777'
+os.environ['http_proxy'] = ct.OPEN_AI_HTTP_PROXY
+os.environ['https_proxy'] = ct.OPEN_AI_HTTP_PROXY
 # 配置logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -37,7 +37,7 @@ async def gpt_llm(repid: str, chara: str):
     logger.info(f'openAI start!')
     ocr_prompt = load_action_prompt(AiCmdEnum.orc)
 
-    result = chat_with_prompt_for_pic(ocr_prompt, mode="gpt-3.5-turbo", temperature=0.0, content=final)
+    result = chat_with_prompt_for_pic(ocr_prompt, mode=ct.OPEN_AI_MODEL, temperature=0.0, content=final)
     results = {repid: result}
     logger.info(f'openAI ended')
     encoded_params = urllib.parse.urlencode(results)
@@ -54,6 +54,7 @@ async def gpt_llm(repid: str, chara: str):
 
 @app2.post("/test/")
 async def test(files: List[UploadFile] = File(...)):
+    file_bytes = None
     for file in files:
         file_bytes = await file.read()
     img_files = [("files", file_bytes)]

@@ -52,7 +52,7 @@ class ConfigSet:
             with open(fp, 'r', encoding='UTF-8') as load_f:
                 load_dict = json.load(load_f)
                 load_f.close()
-        except exception as e:
+        except Exception as e:
             print(e)
         finally:
             return load_dict
@@ -71,7 +71,6 @@ class ConfigSet:
             cls.cfg_ = cls.load_json(pathtocfg)
             logger.info(f'Config file {pathtocfg} loaded.')
         return cls.cfg_
-
 
 
 # a=1

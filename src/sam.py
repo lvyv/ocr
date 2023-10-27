@@ -2,7 +2,7 @@
 # input: image: np.ndarray   output:masks
 
 from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
-import cv2
+# import cv2
 import numpy as np
 import config.constants as ct
 
@@ -18,13 +18,13 @@ def show_anns(anns):  # 构建标签张量
     tensor = np.ones((sorted_anns[0]['segmentation'].shape[0], sorted_anns[0]['segmentation'].shape[1], 1))
 
     # 遍历每个注释，并将其对应的掩码区域用随机颜色填充到图像数组中
-    i = 0
-    l = len(sorted_anns)
+    ii = 0
+    ll = len(sorted_anns)
     for ann in sorted_anns:
-        i += 1
+        ii += 1
         m = ann['segmentation']
-        tensor[m] = i
-        if i > l//2:
+        tensor[m] = ii
+        if ii > ll // 2:
             break
 
     return tensor
@@ -42,4 +42,3 @@ def create_tensor(image):
     tensor = show_anns(masks)
 
     return tensor
-

@@ -27,8 +27,8 @@ entrypoint of the app
 """
 import requests
 import uvicorn
-import cv2
-import numpy as np
+# import cv2
+# import numpy as np
 from app.utils.app_exceptions import AppExceptionCase
 from fastapi import FastAPI
 from app.routers import img_outline, reqhistory
@@ -48,11 +48,11 @@ from multiprocessing import Process
 import config.constants as ct
 import logging
 import urllib.parse
-import openai
+# import openai
 # from hdbscan import get_merged_polygon_for_hdbscan
-from extract_the_result import load_action_prompt
-from extract_the_result import chat_with_prompt_for_pic
-from extract_the_result import AiCmdEnum
+# from extract_the_result import load_action_prompt
+# from extract_the_result import chat_with_prompt_for_pic
+# from extract_the_result import AiCmdEnum
 from Rest import get_image_chara_and_prompt
 import json
 
