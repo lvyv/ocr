@@ -74,9 +74,15 @@
 
 # 已知问题
 
- **1. test_scheduler.py文件运行过程中报一个警告回调错误**
+**1.在ubuntu环境部署，按本文件步骤报错from LLMChain不能import。**
 
-**2. test_scheduler.py的工作进场容错不好，一旦出错，无法继续完成任务**
+**2. test_scheduler.py文件运行过程中报一个警告回调错误。**
+
+**3. test_scheduler.py的工作进程容错不好，一旦出错无法承担新任务（比如openai进程无响应，则服务无法使用，即使openai恢复）。**
+
+
+
+# 任务要求
 
 # 任务要求
 
