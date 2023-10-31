@@ -43,11 +43,18 @@ from pydantic import BaseModel
 from typing import List
 from config import constants as ct
 from app.models.dao_reqhistory import RequestHistoryCRUD
-# from paddleocr import PaddleOCR
 import logging
-#from main import get_image_and_ocr_and_result
 from app.routers.common import img_queue
+import requests
+from Rest import get_image_chara_and_prompt
+import os
+import urllib.parse
 
+os.environ['NO_PROXY'] = '127.0.0.1'
+
+# 配置logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 router = APIRouter(
     prefix="/api/v1/image",
@@ -77,14 +84,6 @@ async def outline(files: List[UploadFile] = File(...), db: get_db = Depends()):
     """
 
     try:
-        # res = None
-        # for file in files:
-        #     file_bytes = await file.read()
-        #     image = cv2.imdecode(np.frombuffer(file_bytes, np.uint8), cv2.IMREAD_COLOR)
-        #     ocr = PaddleOCR(use_angle_cls=True,
-        #                     lang="ch")  # need to run only once to download and load model into memory
-        #     result = ocr.ocr(image, cls=True)
-        #     print(content.decode('utf-8'))
         """
         图片内容提炼
         :param devs:
@@ -112,25 +111,61 @@ async def outline(files: List[UploadFile] = File(...), db: get_db = Depends()):
     except json.decoder.JSONDecodeError:
         res = ServiceResult(AppException.HttpRequestParamsIllegal())
 
-    # img_list = []
-    # for file in files:
-    #     file_bytes = await file.read()
-    #     img_list.append(file_bytes)
     for file in files:
         file_bytes = await file.read()
     pro = Content(res.value.id, file_bytes)
     img_queue.put(pro)
 
-    '''
-    i = 0
-    results = {}
+    return handle_result(res)
+
+
+@router.post("/synch")
+async def synch(files: List[UploadFile] = File(...), db: get_db = Depends()):
     for file in files:
         file_bytes = await file.read()
-        i += 1
 
-        img = "picture{}".format(i)
+        # 传给OCR
+        img_files = [("files", file_bytes)]
+        url = f"https://127.0.0.1:29083/ocr/"
 
-        result = get_image_and_ocr_and_result(file_bytes)
-        results[img] = result
-    '''
-    return handle_result(res)
+        try:
+            response = requests.post(url, files=img_files, verify=False)
+
+            if response.status_code == requests.codes.ok:
+                print("post ocr请求成功！")
+            else:
+                print("post ocr请求失败！")
+
+        except requests.exceptions.RequestException as e:
+            logger.info(f"OCR fastAPI连接失败！")
+            response = None
+            result = "OCR fastAPI连接失败！"
+
+        if response is not None:
+            # 获取坐标
+            data = response.json()
+            rectangles = json.loads(data)
+            logger.info(f"OCR 获取坐标成功！")
+
+            # 聚类
+            chara = get_image_chara_and_prompt(file_bytes, rectangles)
+            final = []
+            for i in chara.keys():
+                final.append(chara[i])
+            logger.info(final)
+
+            # 用requests上传chara
+            x1 = json.dumps(chara)
+            encoded_params = urllib.parse.quote(x1)
+
+            base_url = f"https://127.0.0.1:29082/gpt/?repid=1&chara={encoded_params}"
+
+            try:
+                response = requests.put(base_url, data=encoded_params, verify=False)
+                result = response.text
+
+            except requests.exceptions.RequestException as e:
+                logger.info(f"GPT fastAPI连接失败！")
+                result = "GPT fastAPI连接失败！"
+
+            return result

@@ -27,8 +27,6 @@ entrypoint of the app
 """
 import requests
 import uvicorn
-# import cv2
-# import numpy as np
 from app.utils.app_exceptions import AppExceptionCase
 from fastapi import FastAPI
 from app.routers import img_outline, reqhistory
@@ -44,15 +42,9 @@ import threading
 import app.models.tables as tb
 from fastapi.staticfiles import StaticFiles
 from multiprocessing import Process
-# from Rest import get_image_and_ocr_and_result
 import config.constants as ct
 import logging
 import urllib.parse
-# import openai
-# from hdbscan import get_merged_polygon_for_hdbscan
-# from extract_the_result import load_action_prompt
-# from extract_the_result import chat_with_prompt_for_pic
-# from extract_the_result import AiCmdEnum
 from Rest import get_image_chara_and_prompt
 import json
 
@@ -71,32 +63,42 @@ def img_deal(imgqueue):  # 从队列中获得任务id和图片，得到图片分
         # 将图片传给OCR API
         img_files = [("files", image)]
         url = f"https://127.0.0.1:29083/ocr/"
-        response = requests.post(url, files=img_files, verify=False)
 
-        if response.status_code == requests.codes.ok:
-            print("post ocr请求成功！")
-        else:
-            print("post ocr请求失败！")
+        try:
+            response = requests.post(url, files=img_files, verify=False)
 
-        # 获取坐标
-        data = response.json()
-        rectangles = json.loads(data)
-        logger.info(f"OCR 获取坐标成功！")
+            if response.status_code == requests.codes.ok:
+                print("post ocr请求成功！")
+            else:
+                print("post ocr请求失败！")
 
-        chara = get_image_chara_and_prompt(image, rectangles)
+        except requests.exceptions.RequestException as e:
+            logger.info(f"OCR fastAPI连接失败！")
+            response = None
 
-        # 用requests上传chara
-        x1 = json.dumps(chara)
-        encoded_params = urllib.parse.quote(x1)
+        if response is not None:
+            # 获取坐标
+            data = response.json()
+            rectangles = json.loads(data)
+            logger.info(f"OCR 获取坐标成功！")
 
-        base_url = f"https://127.0.0.1:29082/gpt/?repid={pid}&chara={encoded_params}"
+            chara = get_image_chara_and_prompt(image, rectangles)
 
-        response = requests.put(base_url, data=encoded_params, verify=False)
+            # 用requests上传chara
+            x1 = json.dumps(chara)
+            encoded_params = urllib.parse.quote(x1)
 
-        if response.status_code == requests.codes.ok:
-            print("PUT请求成功！")
-        else:
-            print("PUT请求失败！")
+            base_url = f"https://127.0.0.1:29082/gpt/?repid={pid}&chara={encoded_params}"
+
+            try:
+                response = requests.put(base_url, data=encoded_params, verify=False)
+
+                if response.status_code == requests.codes.ok:
+                    print("PUT请求成功！")
+                else:
+                    print("PUT请求失败！")
+            except requests.exceptions.RequestException as e:
+                logger.info(f"GPT fastAPI连接失败！")
 
 
 # FastAPI进程
@@ -133,8 +135,6 @@ def run():
     img_deal_process = Process(target=img_deal, args=(img_queue,))
     img_deal_process.start()
     logger.info(f'***2*****************  XBCX AI services  ********************')
-    # logging.info(f'Task tables were created by import statement {tb.TABLES}.')
-    # logging.info(f'AI micro service starting at {ct.SCHEDULE_HOST}: {ct.SCHEDULE_PORT}')
     uvicorn.run('app.main:app',  # noqa 标准用法
                 host='0.0.0.0',
                 port=29081,

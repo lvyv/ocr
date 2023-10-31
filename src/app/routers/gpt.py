@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 import logging
 from extract_the_result import load_action_prompt
 from extract_the_result import chat_with_prompt_for_pic
@@ -11,11 +11,14 @@ import os
 from typing import List
 from fastapi import File, UploadFile
 import config.constants as ct
+from app.services.reqhistory import ReqHistoryService
+from config.database import get_db
+
 
 os.environ['http_proxy'] = ct.OPEN_AI_HTTP_PROXY
 os.environ['https_proxy'] = ct.OPEN_AI_HTTP_PROXY
 # 配置logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 app2 = FastAPI(
@@ -25,7 +28,7 @@ app2 = FastAPI(
 
 
 @app2.put("/gpt/")
-async def gpt_llm(repid: str, chara: str):
+async def gpt_llm(repid: str, chara: str, db: get_db = Depends()):
     logger.info(f'成功接收chara！')
     # 将chara转回字典
     chara = json.loads(chara)
@@ -37,19 +40,20 @@ async def gpt_llm(repid: str, chara: str):
     logger.info(f'openAI start!')
     ocr_prompt = load_action_prompt(AiCmdEnum.orc)
 
-    result = chat_with_prompt_for_pic(ocr_prompt, mode=ct.OPEN_AI_MODEL, temperature=0.0, content=final)
-    results = {repid: result}
+    try:
+        result = chat_with_prompt_for_pic(ocr_prompt, mode=ct.OPEN_AI_MODEL, temperature=0.0, content=final)
+
+    except Exception as e:
+        result = 'OpenAI调用出现错误'
+
     logger.info(f'openAI ended')
-    encoded_params = urllib.parse.urlencode(results)
-    base_url = "https://127.0.0.1:29081/api/v1/reqhistory/item/?reqid={}&res={}".format(repid, encoded_params)
 
-    response = requests.put(base_url, data=encoded_params, verify=False)
-
-    if response.status_code == requests.codes.ok:
-        print("PUT请求成功！")
-    else:
-        print("PUT请求失败！")
-    return
+    # 将结果保存入数据库
+    logger.info(f'save db start!')
+    reqs = ReqHistoryService(db)
+    results = reqs.update_item(repid, result)
+    logger.info(f'save db ended!')
+    return result
 
 
 @app2.post("/test/")
