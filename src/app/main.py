@@ -49,7 +49,7 @@ from Rest import get_image_chara_and_prompt
 import json
 
 # 配置logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
@@ -72,8 +72,8 @@ def img_deal(imgqueue):  # 从队列中获得任务id和图片，得到图片分
             else:
                 print("post ocr请求失败！")
 
-        except requests.exceptions.RequestException as e:
-            logger.info(f"OCR fastAPI连接失败！")
+        except requests.exceptions.RequestException as err:
+            logger.error(f"OCR fastAPI连接失败！{err}")
             response = None
 
         if response is not None:
@@ -81,24 +81,21 @@ def img_deal(imgqueue):  # 从队列中获得任务id和图片，得到图片分
             data = response.json()
             rectangles = json.loads(data)
             logger.info(f"OCR 获取坐标成功！")
-
             chara = get_image_chara_and_prompt(image, rectangles)
-
             # 用requests上传chara
             x1 = json.dumps(chara)
             encoded_params = urllib.parse.quote(x1)
-
             base_url = f"https://127.0.0.1:29082/gpt/?repid={pid}&chara={encoded_params}"
-
-            try:
-                response = requests.put(base_url, data=encoded_params, verify=False)
-
-                if response.status_code == requests.codes.ok:
-                    print("PUT请求成功！")
-                else:
-                    print("PUT请求失败！")
-            except requests.exceptions.RequestException as e:
-                logger.info(f"GPT fastAPI连接失败！")
+            logger.info(base_url)
+            # try:
+            #     response = requests.put(base_url, data=encoded_params, verify=False)
+            #
+            #     if response.status_code == requests.codes.ok:
+            #         print("PUT请求成功！")
+            #     else:
+            #         print("PUT请求失败！")
+            # except requests.exceptions.RequestException as err:
+            #     logger.info(f"GPT fastAPI连接失败！{err}")
 
 
 # FastAPI进程
@@ -134,7 +131,7 @@ def run():
     """Test app.main:app"""
     img_deal_process = Process(target=img_deal, args=(img_queue,))
     img_deal_process.start()
-    logger.info(f'***2*****************  XBCX AI services  ********************')
+    logger.info(f'*********************  SCHEDULER AI services  ********************')
     uvicorn.run('app.main:app',  # noqa 标准用法
                 host='0.0.0.0',
                 port=29081,

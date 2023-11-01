@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse
 
 
 # 配置logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 app_ocr = FastAPI(
@@ -47,6 +47,7 @@ async def test(files: List[UploadFile] = File(...)):
 
 if __name__ == '__main__':
     # 启动fastAPI
+    logging.info(f'*********************  OCR AI services  ********************')
     uvicorn.run(app_ocr,
                 host='0.0.0.0',
                 port=29083,

@@ -3,7 +3,7 @@ import logging
 from extract_the_result import load_action_prompt
 from extract_the_result import chat_with_prompt_for_pic
 from extract_the_result import AiCmdEnum
-import urllib.parse
+# import urllib.parse
 import requests
 import uvicorn
 import json
@@ -43,7 +43,8 @@ async def gpt_llm(repid: str, chara: str, db: get_db = Depends()):
     try:
         result = chat_with_prompt_for_pic(ocr_prompt, mode=ct.OPEN_AI_MODEL, temperature=0.0, content=final)
 
-    except Exception as e:
+    except Exception as err:
+        logger.error(err)
         result = 'OpenAI调用出现错误'
 
     logger.info(f'openAI ended')
@@ -51,7 +52,7 @@ async def gpt_llm(repid: str, chara: str, db: get_db = Depends()):
     # 将结果保存入数据库
     logger.info(f'save db start!')
     reqs = ReqHistoryService(db)
-    results = reqs.update_item(repid, result)
+    result = reqs.update_item(repid, result)
     logger.info(f'save db ended!')
     return result
 
@@ -78,6 +79,7 @@ async def test(files: List[UploadFile] = File(...)):
 
 if __name__ == '__main__':
     # 启动fastAPI
+    logger.info(f'*********************  GPT AI services  ********************')
     uvicorn.run(app2,
                 host='0.0.0.0',
                 port=29082,
