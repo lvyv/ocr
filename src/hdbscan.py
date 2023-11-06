@@ -43,7 +43,7 @@ def get_merged_polygon_for_hdbscan(rectangles):   # output:[[同一聚类的文�
         max_label_num = 0
         for i in wz_labels:
             if wz_labels[i] > max_label_num:
-                max_label = i
+                max_label = int(i)
                 max_label_num = wz_labels[i]
 
         if max_label not in characters:
@@ -55,4 +55,4 @@ def get_merged_polygon_for_hdbscan(rectangles):   # output:[[同一聚类的文�
     for i in characters.keys():
         final.append(characters[i])
 
-    return final
+    return characters

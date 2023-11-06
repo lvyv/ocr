@@ -52,7 +52,7 @@ async def gpt_llm(repid: str, chara: str, db: get_db = Depends()):
     # 将结果保存入数据库
     logger.info(f'save db start!')
     reqs = ReqHistoryService(db)
-    result = reqs.update_item(repid, result)
+    results = reqs.update_item(repid, result)
     logger.info(f'save db ended!')
     return result
 

@@ -64,8 +64,8 @@ def cluster_for_sam(rectangles, tensor):
 def get_image_chara_and_prompt(file, rectangles):
     image = cv2.imdecode(np.frombuffer(file, np.uint8), cv2.IMREAD_COLOR)
 
-    tensor = create_tensor(image)
-    # tensor = np.loadtxt(r'..\tensor.csv', delimiter=',')
+    # tensor = create_tensor(image)
+    tensor = np.loadtxt(r'..\tensor.csv', delimiter=',')
     logger.info(f'2. tensor ended.')
 
     characters = cluster_for_sam(rectangles, tensor)

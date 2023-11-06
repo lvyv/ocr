@@ -49,6 +49,10 @@ import requests
 from Rest import get_image_chara_and_prompt
 import os
 import urllib.parse
+from extract_the_result import load_action_prompt
+from extract_the_result import chat_with_prompt_for_pic
+from extract_the_result import AiCmdEnum
+from hdbscan import get_merged_polygon_for_hdbscan
 
 os.environ['NO_PROXY'] = '127.0.0.1'
 
@@ -120,7 +124,7 @@ async def outline(files: List[UploadFile] = File(...), db: get_db = Depends()):
 
 
 @router.post("/synch")
-async def synch(files: List[UploadFile] = File(...), db: get_db = Depends()):
+async def synch(files: List[UploadFile] = File(...)):
     for file in files:
         file_bytes = await file.read()
 
@@ -149,6 +153,65 @@ async def synch(files: List[UploadFile] = File(...), db: get_db = Depends()):
 
             # 聚类
             chara = get_image_chara_and_prompt(file_bytes, rectangles)
+            final = []
+            for i in chara.keys():
+                final.append(chara[i])
+            logger.info(final)
+
+            # 用requests上传chara
+            x1 = json.dumps(chara)
+            encoded_params = urllib.parse.quote(x1)
+
+            base_url = f"https://127.0.0.1:29082/gpt/?repid=1&chara={encoded_params}"
+
+            try:
+                response = requests.put(base_url, data=encoded_params, verify=False)
+                result = response.text
+
+            except requests.exceptions.RequestException as e:
+                logger.info(f"GPT fastAPI连接失败！")
+                result = "GPT fastAPI连接失败！"
+
+            return result
+
+
+@router.post("/rengong")
+async def get_chara(chara: str):
+    ocr_prompt = load_action_prompt(AiCmdEnum.orc)
+    result = chat_with_prompt_for_pic(ocr_prompt, mode="gpt-3.5-turbo", temperature=0.0, content=chara)
+    return result
+
+
+@router.post("/hdbscan")
+async def use_hdbscan(files: List[UploadFile] = File(...)):
+    for file in files:
+        file_bytes = await file.read()
+
+        # 传给OCR
+        img_files = [("files", file_bytes)]
+        url = f"https://127.0.0.1:29083/ocr/"
+
+        try:
+            response = requests.post(url, files=img_files, verify=False)
+
+            if response.status_code == requests.codes.ok:
+                print("post ocr请求成功！")
+            else:
+                print("post ocr请求失败！")
+
+        except requests.exceptions.RequestException as e:
+            logger.info(f"OCR fastAPI连接失败！")
+            response = None
+            result = "OCR fastAPI连接失败！"
+
+        if response is not None:
+            # 获取坐标
+            data = response.json()
+            rectangles = json.loads(data)
+            logger.info(f"OCR 获取坐标成功！")
+
+            # 聚类
+            chara = get_merged_polygon_for_hdbscan(rectangles)
             final = []
             for i in chara.keys():
                 final.append(chara[i])

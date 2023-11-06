@@ -87,15 +87,15 @@ def img_deal(imgqueue):  # 从队列中获得任务id和图片，得到图片分
             encoded_params = urllib.parse.quote(x1)
             base_url = f"https://127.0.0.1:29082/gpt/?repid={pid}&chara={encoded_params}"
             logger.info(base_url)
-            # try:
-            #     response = requests.put(base_url, data=encoded_params, verify=False)
-            #
-            #     if response.status_code == requests.codes.ok:
-            #         print("PUT请求成功！")
-            #     else:
-            #         print("PUT请求失败！")
-            # except requests.exceptions.RequestException as err:
-            #     logger.info(f"GPT fastAPI连接失败！{err}")
+            try:
+                response = requests.put(base_url, data=encoded_params, verify=False)
+
+                if response.status_code == requests.codes.ok:
+                    print("PUT请求成功！")
+                else:
+                    print("PUT请求失败！")
+            except requests.exceptions.RequestException as err:
+                logger.info(f"GPT fastAPI连接失败！{err}")
 
 
 # FastAPI进程
