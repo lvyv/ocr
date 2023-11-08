@@ -7,6 +7,9 @@ import numpy as np
 import config.constants as ct
 import torch
 
+sam = sam_model_registry["default"](checkpoint=ct.SAM_MODEL_PATH)
+sam.to(device='cuda')
+
 
 def show_anns(anns):  # 构建标签张量
     if len(anns) == 0:
@@ -32,7 +35,7 @@ def show_anns(anns):  # 构建标签张量
 
 
 def create_masks(image):
-    sam = sam_model_registry["default"](checkpoint=ct.SAM_MODEL_PATH)
+
     mask_generator = SamAutomaticMaskGenerator(sam)
     masks = mask_generator.generate(image)
     return masks
