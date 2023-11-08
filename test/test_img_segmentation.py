@@ -50,7 +50,7 @@ def show_mask(mask, ax, random_color=False):
     if random_color:
         color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
     else:
-        color = np.array([30 / 255, 144 / 255, 255 / 255, 0.6])
+        color = np.array([144 / 255, 144 / 255, 0 / 255, 0.5])
     h, w = mask.shape[-2:]
     mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
     ax.imshow(mask_image)
@@ -99,7 +99,7 @@ class TestMain(unittest.TestCase):
             filename = f'../pic/{obj}.png'
             image = cv2.imread(filename)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            points = [[34.0, 33.0], [1061.0, 33.0], [1061.0, 96.0], [34.0, 96.0]]
+            points =  [[1148.0, 390.0], [1773.0, 398.0], [1772.0, 524.0], [1146.0, 515.0]]
             masks, scores, logits = self.sam_.predict_mask(image, points)
 
             for i, (mask, score) in enumerate(zip(masks, scores)):
