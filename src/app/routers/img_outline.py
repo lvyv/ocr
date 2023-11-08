@@ -30,8 +30,6 @@ controller层，负责电池模型调用路由分发.
 # License: MIT
 
 import json
-import cv2
-import numpy as np
 import time
 from fastapi import APIRouter, File, UploadFile, Depends
 from app.schemas.reqhistory import ReqItemCreate
@@ -39,7 +37,6 @@ from app.services.sv_img_outline import ImageOutlineService
 from app.utils.service_result import handle_result, ServiceResult
 from app.utils.app_exceptions import AppException
 from config.database import get_db
-from pydantic import BaseModel
 from typing import List
 from config import constants as ct
 from app.models.dao_reqhistory import RequestHistoryCRUD
@@ -52,7 +49,7 @@ import urllib.parse
 from extract_the_result import load_action_prompt
 from extract_the_result import chat_with_prompt_for_pic
 from extract_the_result import AiCmdEnum
-from hdbscan import get_merged_polygon_for_hdbscan
+from hdbscan import get_merged_polygon_by_hdbscan, get_unmerged_polygon_by_hdbscan
 
 os.environ['NO_PROXY'] = '127.0.0.1'
 
@@ -125,6 +122,7 @@ async def outline(files: List[UploadFile] = File(...), db: get_db = Depends()):
 
 @router.post("/synch")
 async def synch(files: List[UploadFile] = File(...)):
+    result = None
     for file in files:
         file_bytes = await file.read()
 
@@ -140,8 +138,8 @@ async def synch(files: List[UploadFile] = File(...)):
             else:
                 print("post ocr请求失败！")
 
-        except requests.exceptions.RequestException as e:
-            logger.info(f"OCR fastAPI连接失败！")
+        except requests.exceptions.RequestException as err:
+            logger.error(f"OCR fastAPI连接失败！{err}")
             response = None
             result = "OCR fastAPI连接失败！"
 
@@ -168,22 +166,23 @@ async def synch(files: List[UploadFile] = File(...)):
                 response = requests.put(base_url, data=encoded_params, verify=False)
                 result = response.text
 
-            except requests.exceptions.RequestException as e:
-                logger.info(f"GPT fastAPI连接失败！")
+            except requests.exceptions.RequestException as err:
+                logger.info(f"GPT fastAPI连接失败！{err}")
                 result = "GPT fastAPI连接失败！"
 
-            return result
+    return result
 
 
 @router.post("/rengong")
 async def get_chara(chara: str):
-    ocr_prompt = load_action_prompt(AiCmdEnum.orc)
+    ocr_prompt = load_action_prompt(AiCmdEnum.ocr)
     result = chat_with_prompt_for_pic(ocr_prompt, mode="gpt-3.5-turbo", temperature=0.0, content=chara)
     return result
 
 
 @router.post("/hdbscan")
 async def use_hdbscan(files: List[UploadFile] = File(...)):
+    result = None
     for file in files:
         file_bytes = await file.read()
 
@@ -199,8 +198,8 @@ async def use_hdbscan(files: List[UploadFile] = File(...)):
             else:
                 print("post ocr请求失败！")
 
-        except requests.exceptions.RequestException as e:
-            logger.info(f"OCR fastAPI连接失败！")
+        except requests.exceptions.RequestException as err:
+            logger.error(f"OCR fastAPI连接失败！{err}")
             response = None
             result = "OCR fastAPI连接失败！"
 
@@ -210,8 +209,14 @@ async def use_hdbscan(files: List[UploadFile] = File(...)):
             rectangles = json.loads(data)
             logger.info(f"OCR 获取坐标成功！")
 
-            # 聚类
-            chara = get_merged_polygon_for_hdbscan(rectangles)
+            # 聚类或不聚类
+            post_process = 'HDBSCAN'
+            # post_process = 'OCRONLY'
+            chara = {}
+            if post_process == 'HDBSCAN':
+                chara = get_merged_polygon_by_hdbscan(rectangles)
+            if post_process == 'OCRONLY':
+                chara = get_unmerged_polygon_by_hdbscan(rectangles)
             final = []
             for i in chara.keys():
                 final.append(chara[i])
@@ -221,14 +226,14 @@ async def use_hdbscan(files: List[UploadFile] = File(...)):
             x1 = json.dumps(chara)
             encoded_params = urllib.parse.quote(x1)
 
-            base_url = f"https://127.0.0.1:29082/gpt/?repid=1&chara={encoded_params}"
+            base_url = f"https://127.0.0.1:29082/gpt/?repid=1&chara={encoded_params}&memo={file.filename}&model={post_process}"
 
             try:
                 response = requests.put(base_url, data=encoded_params, verify=False)
                 result = response.text
-
-            except requests.exceptions.RequestException as e:
-                logger.info(f"GPT fastAPI连接失败！")
+                logger.info(f'*{file.filename}* is successfully processed.')
+            except requests.exceptions.RequestException as err:
+                logger.info(f"GPT fastAPI连接失败！{err}")
                 result = "GPT fastAPI连接失败！"
 
-            return result
+    return result

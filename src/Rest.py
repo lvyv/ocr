@@ -29,7 +29,7 @@ logger.setLevel(logging.DEBUG)
 #         characters = get_merged_polygon_for_hdbscan(rectangles)
 #
 #         # get prompt from file.
-#         orc_prompt = load_action_prompt(AiCmdEnum.orc)
+#         orc_prompt = load_action_prompt(AiCmdEnum.ocr)
 #
 #         result = chat_with_prompt_for_pic(orc_prompt, mode="gpt-3.5-turbo", temperature=0.0, content=characters)
 #
@@ -72,7 +72,7 @@ def get_image_chara_and_prompt(file, rectangles):
     logger.info(f'3. Clustering ended.')
 
     # get prompt from file.
-    ocr_prompt = load_action_prompt(AiCmdEnum.orc)
+    ocr_prompt = load_action_prompt(AiCmdEnum.ocr)
     # result = chat_with_prompt_for_pic(orc_prompt, mode="gpt-3.5-turbo", temperature=0.0, content=characters)
     # logger.info(f'3. LLM ended.')
     logger.info(f'{characters}\n{ocr_prompt}\n')
@@ -87,7 +87,7 @@ def get_image_chara_and_prompt(file, rectangles):
 #     characters = get_merged_polygon_for_hdbscan(rectangles)
 #     logger.info(f'2. Clustering ended.')
 #     # get prompt from file.
-#     ocr_prompt = load_action_prompt(AiCmdEnum.orc)
+#     ocr_prompt = load_action_prompt(AiCmdEnum.ocr)
 #     result = chat_with_prompt_for_pic(ocr_prompt, mode="gpt-3.5-turbo", temperature=0.0, content=characters)
 #     logger.info(f'3. LLM ended.')
 #     logger.info(f'{characters}\n{ocr_prompt}\n{result}')

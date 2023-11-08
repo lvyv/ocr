@@ -15,7 +15,7 @@ def produce_point(rectangle):
     return points
 
 
-def get_merged_polygon_for_hdbscan(rectangles):   # output:[[同一聚类的文字],[]]
+def get_merged_polygon_by_hdbscan(rectangles):   # output:[[同一聚类的文字],[]]
     # 将矩形坐标转换为特征向量 features
     # 创建一个字典 chara = {’文字’：矩形生成的点的个数}
     chara = {}
@@ -55,4 +55,15 @@ def get_merged_polygon_for_hdbscan(rectangles):   # output:[[同一聚类的文�
     for i in characters.keys():
         final.append(characters[i])
 
+    return characters
+
+
+def get_unmerged_polygon_by_hdbscan(rectangles):   # output:[[同一聚类的文字],[]]
+    # 将ocr矩形的所有文字添加到字典
+    # {0: ['ocr1', 'ocr2']}
+    characters = {}
+    texts = []
+    for rectangle in rectangles:
+        texts.append(rectangle[1][0])
+    characters[0] = texts
     return characters

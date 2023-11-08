@@ -11,7 +11,11 @@ import os
 from typing import List
 from fastapi import File, UploadFile
 import config.constants as ct
+import time
+from app.utils.service_result import ServiceResult
+from app.schemas.reqhistory import ReqItemCreate
 from app.services.reqhistory import ReqHistoryService
+from app.models.dao_reqhistory import RequestHistoryCRUD
 from config.database import get_db
 
 
@@ -28,7 +32,7 @@ app2 = FastAPI(
 
 
 @app2.put("/gpt/")
-async def gpt_llm(repid: str, chara: str, db: get_db = Depends()):
+async def gpt_llm(repid: str, chara: str, db: get_db = Depends(), memo='', model=''):
     logger.info(f'成功接收chara！')
     # 将chara转回字典
     chara = json.loads(chara)
@@ -38,7 +42,7 @@ async def gpt_llm(repid: str, chara: str, db: get_db = Depends()):
     logger.info(final)
 
     logger.info(f'openAI start!')
-    ocr_prompt = load_action_prompt(AiCmdEnum.orc)
+    ocr_prompt = load_action_prompt(AiCmdEnum.ocr)
 
     try:
         result = chat_with_prompt_for_pic(ocr_prompt, mode=ct.OPEN_AI_MODEL, temperature=0.0, content=final)
@@ -51,8 +55,21 @@ async def gpt_llm(repid: str, chara: str, db: get_db = Depends()):
 
     # 将结果保存入数据库
     logger.info(f'save db start!')
+    dev_type = model
+    external_data = {
+        'model': dev_type,
+        'status': ct.REQ_STATUS_PENDING,
+        'result': ct.REQ_STATUS_PENDING,
+        'requestts': int(time.time() * 1000),
+        'memo': memo
+    }
+    item = ReqItemCreate(**external_data)
+
+    outline_item = RequestHistoryCRUD(db).create_record(item)
+    res = ServiceResult(outline_item)
+
     reqs = ReqHistoryService(db)
-    results = reqs.update_item(repid, result)
+    reqs.update_item(res.value.id, result)
     logger.info(f'save db ended!')
     return result
 
@@ -79,7 +96,7 @@ async def test(files: List[UploadFile] = File(...)):
 
 if __name__ == '__main__':
     # 启动fastAPI
-    logger.info(f'*********************  GPT AI services  ********************')
+    logging.info(f'*********************  GPT AI services  ********************')
     uvicorn.run(app2,
                 host='0.0.0.0',
                 port=29082,
