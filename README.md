@@ -20,8 +20,8 @@
    
    模型文件建议下载到源码根下的新建checkpoints目录，命名sam_vit_h_4b8939.pth。
 
-3. 确保test目录下的配置文件model_service.cfg中的配置项是正确的。
-   
+3. 确保test目录下的配置文件model_service.cfg中的配置项是正确的。  
+   *gpt-4-1106-preview或
    *注意open ai的key
    
    *注意代理服务器配置

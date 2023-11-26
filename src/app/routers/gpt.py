@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends
 import logging
 from extract_the_result import load_action_prompt
-from extract_the_result import chat_with_prompt_for_pic
+from extract_the_result import chat_with_prompt_for_pic, chat_with_prompt_for_exam
 from extract_the_result import AiCmdEnum
 # import urllib.parse
 import requests
@@ -17,6 +17,7 @@ from app.schemas.reqhistory import ReqItemCreate
 from app.services.reqhistory import ReqHistoryService
 from app.models.dao_reqhistory import RequestHistoryCRUD
 from config.database import get_db
+from docx import Document
 
 
 os.environ['http_proxy'] = ct.OPEN_AI_HTTP_PROXY
@@ -29,6 +30,86 @@ app2 = FastAPI(
     title="OpenAI微服务",
     version="0.1.0",
 )
+
+
+def replace_placeholder(doc, placeholder, replacement):
+    # 打开 Word 文档
+    # doc = Document(doc_path)
+
+    # 遍历文档中的段落
+    for paragraph in doc.paragraphs:
+        # 在段落文本中查找占位符
+        if placeholder in paragraph.text:
+            # 替换占位符为指定的内容
+            paragraph.text = paragraph.text.replace(placeholder, replacement)
+
+    # 遍历文档中的表格
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                # 在表格单元格中查找占位符
+                if placeholder in cell.text:
+                    # 替换占位符为指定的内容
+                    cell.text = cell.text.replace(placeholder, replacement)
+
+    # 保存修改后的文档
+    # doc.save("modified_document.docx")
+
+
+@app2.put("/ai/tutor")
+def ai_tutor(course_objs: str):
+    res = {}
+    try:
+        exam_prompt = load_action_prompt(AiCmdEnum.exam)
+        resp = chat_with_prompt_for_exam(exam_prompt, mode=ct.OPEN_AI_MODEL, temperature=0.0, content=course_objs)
+        # resp_obj = json.loads(resp)
+        # content = resp_obj.get('content')
+        result = {
+            "code": 200,
+            "content": resp
+        }
+
+        # 打开 Word 文档
+        doc_template_path = 'E:\\桌面\\exam_paper\\tpl.docx'
+        target_path = 'E:\\桌面\\exam_paper\\gen.docx'
+
+        # 创建文档
+        doc = Document(doc_template_path)
+        items = ''
+        sections_str = result.get('content')
+        sections = json.loads(sections_str)
+        # 填空题
+        fill_in_blank = sections.get('fill-in-blank')
+        for ind, ques in enumerate(fill_in_blank):
+            q_it = f'{ind+1}.' + ques.get('question') + '\n'
+            items = items + q_it
+        place_holder = '[fill_blank]'
+        replace_placeholder(doc, place_holder, items)
+        # 选择题
+        items = ''
+        m_c = sections.get('multiple-choice')
+        for ind, ques in enumerate(m_c):
+            q_it = f'{ind+1}.' + ques.get('question') + '\n'
+            opts = ques.get('choices')
+            choices = ''
+            for idx, opt in enumerate(opts):
+                opts_str = ''
+                opts_str = chr(65 + idx) + '.' + opts_str + opt + '\n'
+                choices = choices + opts_str
+
+            items = items + q_it + choices
+        place_holder = '[multiple_choice]'
+        replace_placeholder(doc, place_holder, items)
+
+        doc.save(target_path)
+
+        res['code'] = 200
+        res['content'] = result
+    except Exception as err:
+        logger.error(err)
+        res = {'code': 500, 'content': f'{err}'}
+    finally:
+        return res
 
 
 @app2.put("/gpt/")

@@ -13,11 +13,13 @@ class AiCmdEnum(str, Enum):
         description: Ai command enum.
     """
     ocr = 'ocr'
+    assignment = 'assignment'
+    exam = 'exam'
 
 
 def get_prompt_file_path(action: AiCmdEnum) -> str:           # 得到对应action的prompt文件路径
     env_obj = pathlib.Path(__file__)
-    file_format = "{}_prompt.txt"
+    file_format = "{}" + ct.PROMPT_SUFFIX
     file_name = file_format.format(action.value)
     prompt_file_path = env_obj.parent.parent.joinpath(f"prompts/{file_name}")
     # if prompt file does not exist, use default prompt.
@@ -47,6 +49,31 @@ def load_action_prompt(action: AiCmdEnum) -> list:
 
 
 def chat_with_prompt_for_pic(template: list, mode: str, temperature: float, content: list) -> (
+        list):
+    """
+    chat with prompt.
+    :param template: chat prompt list.
+    :param mode: chat model.
+    :param temperature: chat temperature.
+    :param content: extra value.
+    :return: (result)
+    """
+    # 0.construct chat prompt.
+    chat_template = ChatPromptTemplate.from_messages(template)
+    # 1.init chat llm.
+    logging.info(f'Going to chat with model: {mode}')
+    llm = ChatOpenAI(temperature=temperature, model=mode, openai_api_key=ct.OPEN_AI_KEY,
+                     openai_organization=ct.OPEN_AI_ORG)
+    # 3.init llm chain
+    chain = LLMChain(llm=llm, prompt=chat_template)
+    # 4.generate response.
+
+    result = chain.run(content)
+
+    return result
+
+
+def chat_with_prompt_for_exam(template: list, mode: str, temperature: float, content: list) -> (
         list):
     """
     chat with prompt.
