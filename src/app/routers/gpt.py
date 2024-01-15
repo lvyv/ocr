@@ -18,6 +18,8 @@ from app.services.reqhistory import ReqHistoryService
 from app.models.dao_reqhistory import RequestHistoryCRUD
 from config.database import get_db
 from docx import Document
+import re
+
 
 
 os.environ['http_proxy'] = ct.OPEN_AI_HTTP_PROXY
@@ -30,6 +32,15 @@ app2 = FastAPI(
     title="OpenAI微服务",
     version="0.1.0",
 )
+
+
+def extract_string_between_identifiers(input_string, start_identifier, end_identifier):
+    pattern = re.compile(f'{re.escape(start_identifier)}(.*?){re.escape(end_identifier)}', re.DOTALL)
+    match = pattern.search(input_string)
+    if match:
+        return match.group(1)
+    else:
+        return None
 
 
 def replace_placeholder(doc, placeholder, replacement):
@@ -61,6 +72,7 @@ def ai_tutor(course_objs: str):
     res = {}
     try:
         exam_prompt = load_action_prompt(AiCmdEnum.exam)
+        # ct.OPEN_AI_MODLE should be gpt-3.5-turbo-1106 or gpt-3.5-turbo or
         resp = chat_with_prompt_for_exam(exam_prompt, mode=ct.OPEN_AI_MODEL, temperature=0.0, content=course_objs)
         # resp_obj = json.loads(resp)
         # content = resp_obj.get('content')
@@ -77,6 +89,7 @@ def ai_tutor(course_objs: str):
         doc = Document(doc_template_path)
         items = ''
         sections_str = result.get('content')
+        sections_str = extract_string_between_identifiers(sections_str, '```json\n', '\n```')
         sections = json.loads(sections_str)
         # 填空题
         fill_in_blank = sections.get('fill-in-blank')
@@ -90,7 +103,7 @@ def ai_tutor(course_objs: str):
         m_c = sections.get('multiple-choice')
         for ind, ques in enumerate(m_c):
             q_it = f'{ind+1}.' + ques.get('question') + '\n'
-            opts = ques.get('choices')
+            opts = ques.get('options')
             choices = ''
             for idx, opt in enumerate(opts):
                 opts_str = ''
